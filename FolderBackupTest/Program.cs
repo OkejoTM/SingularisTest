@@ -15,6 +15,7 @@ var builder = Host.CreateDefaultBuilder(args)
         // Add services.
         services.AddHostedService<FolderBackupService>();
         services.AddSingleton<IFolderBackupSettings, FolderBackupSettings>();
+        services.AddSingleton<IBackupMaker, BackupMaker>();
         services.AddLogging();
     });
 

@@ -9,19 +9,20 @@ namespace FolderBackupTest.Services;
 public class FolderBackupSettings : IFolderBackupSettings
 {
     private readonly ILogger<FolderBackupSettings> _logger;
-    private readonly BackupMaker _backupMaker;
-
+    private readonly IBackupMaker _backupMaker;
+    
+    
     private CronExpression _cronExpression;
     private JsonSettings? _jsonSettings;
     
     public CronExpression CronExpression => _cronExpression;
-    public BackupMaker BackupMaker => _backupMaker;
+    public IBackupMaker BackupMaker => _backupMaker;
 
-    public FolderBackupSettings(IConfiguration configuration, ILogger<FolderBackupSettings> logger)
+    public FolderBackupSettings(IConfiguration configuration, ILogger<FolderBackupSettings> logger, IBackupMaker backupMaker)
     {
         // read from config file
         _jsonSettings = configuration.GetSection("FolderBackup").Get<JsonSettings>();
-        _backupMaker = new BackupMaker();
+        _backupMaker = backupMaker;
         
         _logger = logger;
         
