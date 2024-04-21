@@ -1,5 +1,4 @@
 using FolderBackupTest.Services.Interfaces;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -12,7 +11,7 @@ public class FolderBackupService : IHostedService, IDisposable
 
     private Timer? _timer;
 
-    private readonly object rootSync = new object();
+    private readonly object _rootSync = new object();
     
     public FolderBackupService(IFolderBackupSettings settings, ILogger<FolderBackupService> logger)
     {
@@ -22,11 +21,15 @@ public class FolderBackupService : IHostedService, IDisposable
     
     public Task StartAsync(CancellationToken cancellationToken)
     {
+        
+        DateTime? interval = _settings.CronExpression.GetNextOccurrence(DateTime.UtcNow);
+        var seconds = (interval - DateTime.UtcNow)?.TotalSeconds ?? 0;
+
         _timer = new Timer(
             (e) => ProcessTask(),
             null,
             TimeSpan.Zero, 
-            TimeSpan.FromSeconds(1));
+            TimeSpan.FromSeconds(seconds));
         
         return Task.CompletedTask;
     }
@@ -40,16 +43,15 @@ public class FolderBackupService : IHostedService, IDisposable
 
     private void ProcessTask()
     {
-        if (Monitor.TryEnter(rootSync))
+        if (Monitor.TryEnter(_rootSync))
         {
             
-            Monitor.Exit(rootSync);
+            Monitor.Exit(_rootSync);
         }
         else
         {
             // Скип секции
         }
-        
     }
     
     public void Dispose()
