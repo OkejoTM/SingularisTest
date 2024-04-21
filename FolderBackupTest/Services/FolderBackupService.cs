@@ -11,6 +11,8 @@ public class FolderBackupService : IHostedService, IDisposable
     private readonly ILogger<FolderBackupService> _logger;
 
     private Timer? _timer;
+
+    private readonly object rootSync = new object();
     
     public FolderBackupService(IFolderBackupSettings settings, ILogger<FolderBackupService> logger)
     {
@@ -38,6 +40,15 @@ public class FolderBackupService : IHostedService, IDisposable
 
     private void ProcessTask()
     {
+        if (Monitor.TryEnter(rootSync))
+        {
+            
+            Monitor.Exit(rootSync);
+        }
+        else
+        {
+            // Скип секции
+        }
         
     }
     
