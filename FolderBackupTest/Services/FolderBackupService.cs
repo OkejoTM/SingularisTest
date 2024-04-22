@@ -47,11 +47,25 @@ public class FolderBackupService : IHostedService, IDisposable
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Остановка FolderBackup...");
+        try
+        {
+            _logger.LogInformation("Остановка FolderBackup...");
 
-        _timer?.Change(Timeout.Infinite, 0);
+            _timer?.Change(Timeout.Infinite, 0);
+            Dispose();
 
-        _logger.LogInformation("FolderBackup остановлен.");
+            _logger.LogInformation("FolderBackup остановлен.");
+        }
+        catch (ObjectDisposedException)
+        {
+            _logger.LogError(ErrorMessage.ObjectDisposedError);
+        }
+        catch (Exception e)
+        {
+            _logger.LogCritical(ErrorMessage.UndefinedError);
+            _logger.LogCritical(e.Message);
+        }
+        
         return Task.CompletedTask;
     }
 
@@ -79,5 +93,6 @@ public class FolderBackupService : IHostedService, IDisposable
     public void Dispose()
     {
         _timer?.Dispose();
+        _settings.Dispose();
     }
 }

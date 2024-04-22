@@ -4,6 +4,7 @@ using FolderBackupTest.Models;
 using FolderBackupTest.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 
 namespace FolderBackupTest.Services;
 
@@ -11,24 +12,33 @@ public class FolderBackupSettings : IFolderBackupSettings
 {
     private readonly ILogger<FolderBackupSettings> _logger;
     private readonly IBackupMaker _backupMaker;
-    
-    
+
+
     private CronExpression _cronExpression;
     private JsonSettings? _jsonSettings;
-    
+    private readonly IDisposable _changeToken;
+
     public CronExpression CronExpression => _cronExpression;
 
-    public FolderBackupSettings(IConfiguration configuration, ILogger<FolderBackupSettings> logger, IBackupMaker backupMaker)
+    public FolderBackupSettings(IConfiguration configuration, ILogger<FolderBackupSettings> logger,
+        IBackupMaker backupMaker)
     {
         // read from config file
         _jsonSettings = configuration.GetSection("FolderBackup").Get<JsonSettings>();
         _backupMaker = backupMaker;
-        
-        _logger = logger;
-        
-        SetSettings();
-        
 
+        _logger = logger;
+
+        SetSettings();
+
+        _changeToken = ChangeToken.OnChange(
+            configuration.GetReloadToken,
+            () =>
+            {
+                _logger.LogInformation("Файл конфигурации был изменен, загрузка нового конфигурационного файла");
+                _jsonSettings = configuration.GetSection("FolderBackup").Get<JsonSettings>();
+                SetSettings();
+            });
     }
 
     private void SetSettings()
@@ -79,7 +89,7 @@ public class FolderBackupSettings : IFolderBackupSettings
         {
             throw new KeyNotFoundException(ErrorMessage.PathNotFoundError);
         }
-        
+
         if (_jsonSettings.CronExpression == null)
         {
             throw new KeyNotFoundException(ErrorMessage.CronExpressionNotFoundError);
@@ -89,11 +99,15 @@ public class FolderBackupSettings : IFolderBackupSettings
         {
             throw new DirectoryNotFoundException();
         }
-        
+
         if (!Directory.Exists(_jsonSettings!.DestinationPath))
         {
             throw new DirectoryNotFoundException();
         }
     }
-    
+
+    public void Dispose()
+    {
+        _changeToken.Dispose();
+    }
 }
