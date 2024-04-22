@@ -18,14 +18,20 @@ public class BackupMaker : IBackupMaker
 
     public void DoBackup()
     {
-        if (SourcePath == null || DestinationPath == null) return;
+        if (SourcePath == null || DestinationPath == null)
+        {
+            _logger.LogError("Резервное копирование в эти пути не возможно");
+            return;
+        }
         
         var baseDir = Path.Combine(DestinationPath, "base");
         // Проверяем наличие base
         if (!Directory.Exists(baseDir))
         {
+            _logger.LogInformation("Начало создания base папки");
             // Создаем base
             CreateBaseCopy();
+            _logger.LogInformation("base Папка создана успешно");
         }
         else
         {
@@ -35,11 +41,17 @@ public class BackupMaker : IBackupMaker
             {
                 string incrementalDirectoryName = "inc_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss");
                 string incrementalDirectoryPath = Path.Combine(DestinationPath, incrementalDirectoryName);
+                _logger.LogInformation($"Создание папки {incrementalDirectoryName}");
                 Directory.CreateDirectory(incrementalDirectoryPath);
                 foreach (var file in filesToCopy)
                 {
                     CopyFile(file, Path.Combine(incrementalDirectoryPath, file.Substring(SourcePath.Length + 1)));
                 }
+                _logger.LogInformation($"Папка {incrementalDirectoryName} создана успешно");
+            }
+            else
+            {
+                _logger.LogInformation("Файлы не были изменены или добавлены. Копирование не происходит");
             }
         }
     }
@@ -48,6 +60,7 @@ public class BackupMaker : IBackupMaker
     private List<string> FindChangedAndCreatedFiles(string source)
     {
         // Получить все файлы в source
+        _logger.LogInformation("Начало подсчета файлов для копирования");
         var items = Directory.GetFiles(source, "*", SearchOption.AllDirectories);
         List<string> filesToCopy = new List<string>();
         foreach (var item in items)
@@ -56,8 +69,11 @@ public class BackupMaker : IBackupMaker
             if (CheckFileOnModified(filePath))
             {
                 filesToCopy.Add(item);
+                _logger.LogInformation($"{item} необходимо скопировать");
             }
         }
+
+        _logger.LogInformation($"{filesToCopy.Count} файлов для копирования");
         return filesToCopy;
     }
 
@@ -80,12 +96,14 @@ public class BackupMaker : IBackupMaker
     
     private void CopyFile(string sourceFilePath, string destinationFilePath)
     {
+        _logger.LogInformation($"Копирование файла {sourceFilePath}");
         var dirName = Path.GetDirectoryName(destinationFilePath); 
         if (dirName != null &&!Directory.Exists(dirName))
         {
             Directory.CreateDirectory(dirName);
         }
         File.Copy(sourceFilePath, destinationFilePath);
+        _logger.LogInformation("Файл скопирован");
     }
     
     private void CreateBaseCopy()

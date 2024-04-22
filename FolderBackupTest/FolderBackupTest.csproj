@@ -10,6 +10,7 @@
     <ItemGroup>
       <PackageReference Include="Cronos" Version="0.8.4" />
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0-preview.3.24172.9" />
+      <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.0-preview.3.24172.9" />
     </ItemGroup>
 
 </Project>
