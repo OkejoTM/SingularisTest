@@ -46,8 +46,8 @@ public class FolderBackupSettings : IFolderBackupSettings
         try
         {
             CheckConfigurations();
-            _backupMaker.SourcePath = _jsonSettings!.SourcePath!;
-            _backupMaker.DestinationPath = _jsonSettings!.DestinationPath!;
+            _backupMaker.SourcePath = _jsonSettings!.SourcePath!.TrimEnd('\\', '/');
+            _backupMaker.DestinationPath = _jsonSettings!.DestinationPath!.TrimEnd('\\', '/');
             _cronExpression = CronExpression.Parse(_jsonSettings?.CronExpression);
         }
         catch (ConfigurationErrorsException)
