@@ -16,8 +16,16 @@ public class BackupMaker : IBackupMaker
         _logger = logger;
     }
 
-    public void DoBackup()
+    public void DoBackup(CancellationToken cancellationToken)
     {
+        
+        if (cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogInformation("Резервное копирование прервано.");
+            return;
+        }
+
+        
         if (SourcePath == null || DestinationPath == null)
         {
             _logger.LogError("Резервное копирование в эти пути не возможно");

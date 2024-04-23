@@ -32,7 +32,7 @@ public class FolderBackupService : IHostedService, IDisposable
             var seconds = (interval - DateTime.UtcNow)?.TotalSeconds ?? 0;
 
             _timer = new Timer(
-                (e) => ProcessTask(),
+                (e) => ProcessTask(cancellationToken),
                 null,
                 TimeSpan.Zero,
                 TimeSpan.FromSeconds(seconds));
@@ -69,14 +69,14 @@ public class FolderBackupService : IHostedService, IDisposable
         return Task.CompletedTask;
     }
 
-    private void ProcessTask()
+    private void ProcessTask(CancellationToken cancellationToken)
     {
         if (Monitor.TryEnter(_rootSync))
         {
             // Start
             _logger.LogInformation("Запуск очередной задачи FolderBackup...");
 
-            _backupMaker.DoBackup();
+            _backupMaker.DoBackup(cancellationToken);
 
             _logger.LogInformation("FolderBackup отработал");
             // End task
