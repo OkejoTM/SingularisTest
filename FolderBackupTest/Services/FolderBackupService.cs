@@ -93,6 +93,5 @@ public class FolderBackupService : IHostedService, IDisposable
     public void Dispose()
     {
         _timer?.Dispose();
-        _settings.Dispose();
     }
 }

@@ -1,4 +1,6 @@
-﻿using FolderBackupTest.Services;
+﻿using System.Configuration;
+using FolderBackupTest.Models;
+using FolderBackupTest.Services;
 using FolderBackupTest.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,9 +12,10 @@ var builder = Host.CreateDefaultBuilder(args)
         config.SetBasePath(Directory.GetCurrentDirectory());
         config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
     })
-    .ConfigureServices((services) =>
+    .ConfigureServices((hostingContext, services) =>
     {
         // Add services.
+        services.Configure<JsonSettings>(hostingContext.Configuration.GetSection("FolderBackup"));
         services.AddHostedService<FolderBackupService>();
         services.AddSingleton<IFolderBackupSettings, FolderBackupSettings>();
         services.AddSingleton<IBackupMaker, BackupMaker>();

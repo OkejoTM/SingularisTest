@@ -4,7 +4,7 @@ using FolderBackupTest.Models;
 using FolderBackupTest.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Primitives;
+using Microsoft.Extensions.Options;
 
 namespace FolderBackupTest.Services;
 
@@ -16,29 +16,27 @@ public class FolderBackupSettings : IFolderBackupSettings
 
     private CronExpression _cronExpression;
     private JsonSettings? _jsonSettings;
-    private readonly IDisposable _changeToken;
 
     public CronExpression CronExpression => _cronExpression;
 
-    public FolderBackupSettings(IConfiguration configuration, ILogger<FolderBackupSettings> logger,
+    public FolderBackupSettings(IOptionsMonitor<JsonSettings> options,ILogger<FolderBackupSettings> logger,
         IBackupMaker backupMaker)
     {
         // read from config file
-        _jsonSettings = configuration.GetSection("FolderBackup").Get<JsonSettings>();
+        _jsonSettings = options.CurrentValue;
         _backupMaker = backupMaker;
 
         _logger = logger;
 
         SetSettings();
 
-        _changeToken = ChangeToken.OnChange(
-            configuration.GetReloadToken,
-            () =>
-            {
-                _logger.LogInformation("Файл конфигурации был изменен, загрузка нового конфигурационного файла");
-                _jsonSettings = configuration.GetSection("FolderBackup").Get<JsonSettings>();
-                SetSettings();
-            });
+
+        options.OnChange(jsonSettings =>
+        {
+            _logger.LogInformation("Файл конфигурации был изменен, загрузка нового конфигурационного файла");
+            _jsonSettings = jsonSettings;
+            SetSettings();
+        });
     }
 
     private void SetSettings()
@@ -105,9 +103,5 @@ public class FolderBackupSettings : IFolderBackupSettings
             throw new DirectoryNotFoundException();
         }
     }
-
-    public void Dispose()
-    {
-        _changeToken.Dispose();
-    }
+    
 }

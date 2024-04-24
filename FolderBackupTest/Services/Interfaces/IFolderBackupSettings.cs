@@ -3,7 +3,7 @@ using FolderBackupTest.Models;
 
 namespace FolderBackupTest.Services.Interfaces;
 
-public interface IFolderBackupSettings : IDisposable
+public interface IFolderBackupSettings 
 {
     public CronExpression CronExpression { get; }
     
